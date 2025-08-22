@@ -38,11 +38,11 @@ app.use(
       useDefaults: true,
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"], // all JS is local (no CDN)
-        styleSrc: ["'self'", "'unsafe-inline'"], // allow inline style attrs/classes
+        scriptSrc: ["'self'"],                // all JS is local (no CDN)
+        styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:"],
         fontSrc: ["'self'", "data:"],
-        connectSrc: ["'self'"], // fetch + SSE to same origin
+        connectSrc: ["'self'"],               // fetch + SSE to same origin
         objectSrc: ["'none'"],
         frameAncestors: ["'self'"],
       },
@@ -51,11 +51,8 @@ app.use(
   })
 );
 
-// Expose Chart.js locally as /vendor/chart.umd.js to keep CSP strict
-app.use(
-  '/vendor',
-  express.static(path.resolve(process.cwd(), 'node_modules/chart.js/dist'))
-);
+// If you load /vendor/chart.umd.js from HTML, serve Chart.js from node_modules
+app.use('/vendor', express.static(path.resolve(process.cwd(), 'node_modules/chart.js/dist')));
 
 // ---- Core middleware ----
 app.use(
@@ -82,12 +79,12 @@ app.use('/api/codes', codesRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/config', configRoutes);
 
-// ---- Static frontend (outside backend) ----
-// You can point PUBLIC_DIR to anywhere; fallback to ../public (sibling to /backend)
+// ---- Static frontend (SPA) ----
+// With public at backend/public, this must be ../public from backend/src/server.js
 const publicDir =
   process.env.PUBLIC_DIR
     ? path.resolve(process.env.PUBLIC_DIR)
-    : path.resolve(__dirname, '../../public');
+    : path.resolve(__dirname, '../public');
 
 const indexHtml = path.join(publicDir, 'index.html');
 
@@ -99,17 +96,13 @@ if (fs.existsSync(publicDir)) {
   console.warn('[static] Public directory not found:', publicDir);
 }
 
-// Avoid 500s if a browser asks for /favicon.ico and you don’t ship one
+// Avoid 500s for browsers asking for /favicon.ico when none is shipped
 app.get('/favicon.ico', (_req, res) => res.status(204).end());
 
-// SPA fallback for any non-API route (only if index.html is present)
-app.get(/^\/(?!api\/).*/, (_req, res, next) => {
-  if (fs.existsSync(indexHtml)) {
-    return res.sendFile(indexHtml);
-  }
-  return res
-    .status(404)
-    .json({ error: `index.html not found at ${indexHtml}` });
+// SPA fallback for any non-API route
+app.get(/^\/(?!api\/).*/, (_req, res) => {
+  if (fs.existsSync(indexHtml)) return res.sendFile(indexHtml);
+  return res.status(404).json({ error: `index.html not found at ${indexHtml}` });
 });
 
 // ---- Error handler (last) ----
@@ -120,8 +113,9 @@ app.use((err, _req, res, _next) => {
 
 // ---- Start server after DB connects ----
 const port = process.env.PORT || 4000;
+const mongoUrl = process.env.MONGO_URL || process.env.MONGO_URI;
 
-connectDB(process.env.MONGO_URI)
+connectDB(mongoUrl)
   .then(() => {
     app.listen(port, () => {
       console.log('MongoDB connected');
@@ -132,5 +126,3 @@ connectDB(process.env.MONGO_URI)
     console.error('DB connect failed', err);
     process.exit(1);
   });
-
-  

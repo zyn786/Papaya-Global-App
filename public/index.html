@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>Papaya Global — Realtime Payroll Management</title>
+
+  <link rel="stylesheet" href="/css/styles.css">
+  <script src="/vendor/chart.umd.js"></script>
+  <script src="/js/app.js" defer></script>
+</head>
+<body>
+  <!-- AUTH -->
+  <section id="auth" class="auth-wrap" hidden>
+    <div class="auth-card" role="dialog" aria-labelledby="authTitle">
+      <div class="auth-head">
+        <div class="logo-mark">🧮</div>
+        <h2 id="authTitle" class="m0">Papaya Global Access</h2>
+      </div>
+      <div class="auth-body">
+        <div class="auth-tabs">
+          <button id="tabLogin" class="tab-btn active" type="button">Log in</button>
+          <button id="tabSignup" class="tab-btn" type="button">Sign up</button>
+          <button id="tabBootstrap" class="tab-btn" type="button" title="First-time admin setup">Bootstrap</button>
+        </div>
+
+        <!-- LOGIN -->
+        <form id="formLogin" class="form" autocomplete="off" novalidate>
+          <div class="form-group">
+            <label for="loginEmail">Email</label>
+            <input id="loginEmail" type="email" required />
+          </div>
+          <div class="form-group">
+            <label for="loginPass">Password</label>
+            <input id="loginPass" type="password" required />
+          </div>
+          <button class="btn btn-primary w100" type="submit">Log in</button>
+        </form>
+
+        <!-- SIGNUP -->
+        <form id="formSignup" class="form" autocomplete="off" novalidate hidden>
+          <div class="row-2">
+            <div class="form-group">
+              <label for="suName">Full Name</label>
+              <input id="suName" required />
+            </div>
+            <div class="form-group">
+              <label for="suEmail">Email</label>
+              <input id="suEmail" type="email" required />
+            </div>
+          </div>
+          <div class="row-2">
+            <div class="form-group">
+              <label for="suPass">Password</label>
+              <input id="suPass" type="password" minlength="6" required />
+            </div>
+            <div class="form-group">
+              <label for="suCode">5-digit Signup Code (from Admin)</label>
+              <input id="suCode" maxlength="5" required />
+            </div>
+          </div>
+          <button class="btn btn-primary w100" type="submit">Create account</button>
+        </form>
+
+        <!-- BOOTSTRAP (first-time admin) -->
+        <form id="formBootstrap" class="form" autocomplete="off" novalidate hidden>
+          <div class="row-2">
+            <div class="form-group">
+              <label for="bootName">Full Name</label>
+              <input id="bootName" required />
+            </div>
+            <div class="form-group">
+              <label for="bootEmail">Email</label>
+              <input id="bootEmail" type="email" required />
+            </div>
+          </div>
+          <div class="row-2">
+            <div class="form-group">
+              <label for="bootPass">Password</label>
+              <input id="bootPass" type="password" minlength="6" required />
+            </div>
+            <div class="form-group">
+              <label for="bootCurr">Workspace Currency</label>
+              <select id="bootCurr">
+                <option value="USD">USD — US Dollar</option>
+                <option value="EUR">EUR — Euro</option>
+                <option value="GBP">GBP — British Pound</option>
+                <option value="PKR">PKR — Pakistani Rupee</option>
+                <option value="INR">INR — Indian Rupee</option>
+                <option value="AED">AED — UAE Dirham</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-primary w100" type="submit">Create Admin</button>
+          <p class="muted mt8">Run this only once for a brand new database.</p>
+        </form>
+
+        <div id="authMsg" class="muted mt8"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- APP -->
+  <div class="container" id="app" hidden>
+    <aside class="sidebar" aria-label="Primary">
+      <div class="logo">
+        <div class="logo-mark">🧮</div>
+        <h1 class="m0">Papaya Global</h1>
+      </div>
+      <ul class="side-nav" id="navList">
+        <li class="active" data-view="dashboard" tabindex="0">Dashboard</li>
+        <li class="admin-only" data-view="employees" tabindex="0">Employees</li>
+        <li data-view="members" tabindex="0">Members</li>
+        <li data-view="transactions" tabindex="0">Transactions</li>
+        <li data-view="reports" tabindex="0">Reports</li>
+        <li class="admin-only" data-view="admin" tabindex="0">Admin Portal</li>
+        <li data-view="settings" tabindex="0">Settings</li>
+        <li id="logout" tabindex="0">Logout</li>
+      </ul>
+    </aside>
+
+    <main class="main">
+      <header class="header">
+        <div class="left">
+          <button class="icon-btn" id="toggleTheme" aria-label="Toggle theme">🌙</button>
+          <h2 id="title" class="m0">Payroll Dashboard</h2>
+        </div>
+        <div class="user-info">
+          <div class="avatar" id="avatar">U</div>
+          <div>
+            <div id="uName">User</div>
+            <div class="badge-line">
+              <span id="uRole">Employee</span> ·
+              <span class="role-badge" id="uBadge">EMP</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="content">
+        <!-- DASHBOARD -->
+        <section id="view-dashboard" class="view active">
+          <div class="cards" id="cards"></div>
+
+          <div class="row">
+            <div class="panel">
+              <div class="panel-header">
+                <h3 class="m0">Financial Overview</h3>
+                <select id="range" aria-label="Time range">
+                  <option value="7">Last 7 days</option>
+                  <option value="30" selected>Last 30 days</option>
+                  <option value="90">Last 90 days</option>
+                </select>
+              </div>
+
+              <div class="chart-wrap">
+                <canvas id="chartFinance" role="img" aria-label="Finance chart"></canvas>
+              </div>
+              <div id="chartFinanceMsg" class="muted mt8" hidden>Chart.js not found — chart disabled.</div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <h3 class="m0">Recent Transactions</h3>
+                <button class="btn btn-outline" id="goTx">View All</button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Owner</th><th>Member</th><th>Type</th><th>Amount</th><th>Details</th><th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody id="txRecent"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+          <div class="panel-header"><h3 class="m0">Balances by Employee</h3></div>
+
+          <div class="chart-wrap">
+            <canvas id="chartEmpBal" role="img" aria-label="Employee balances chart"></canvas>
+          </div>
+          <div id="chartEmpMsg" class="muted mt8" hidden>Chart.js not found — chart disabled.</div>
+        </div>
+        </section>
+
+        <!-- EMPLOYEES (Admin) -->
+        <section id="view-employees" class="view">
+          <div class="panel">
+            <div class="panel-header">
+              <h3 class="m0">Employees</h3>
+              <button class="btn btn-primary" id="addEmp">+ Add Employee</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Name</th><th>Email</th><th>Members</th><th>Balance</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="empTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- MEMBERS -->
+        <section id="view-members" class="view">
+          <div class="panel">
+            <div class="panel-header">
+              <h3 class="m0">Members</h3>
+              <button class="btn btn-primary" id="addMember">+ Add Member</button>
+            </div>
+            <div class="tabs" id="memberTabs" aria-label="Owners tabs"></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Member</th><th>Working ID</th><th>Work Group</th><th>Owner</th>
+                    <th>Commission %</th><th>Received</th><th>Payouts</th><th>Frozen</th><th>Runaway</th><th>Balance</th><th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="memberTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TRANSACTIONS -->
+        <section id="view-transactions" class="view">
+          <div class="panel">
+            <div class="panel-header"><h3 class="m0">Add Transaction</h3></div>
+
+            <div class="row-2">
+              <div class="form-group">
+                <label>Member</label>
+                <select id="txMemberSel" aria-label="Select member"></select>
+              </div>
+              <div class="form-group">
+                <label>Type</label>
+                <select id="txTypeSel" aria-label="Transaction type"></select>
+              </div>
+            </div>
+
+            <div class="row-2">
+              <div class="form-group">
+                <label>Amount</label>
+                <input id="txAmt" type="number" min="0" step="0.01" inputmode="decimal" />
+              </div>
+              <div class="form-group">
+                <label>Note (optional)</label>
+                <input id="txNote" placeholder="reference / note" />
+              </div>
+            </div>
+
+            <div id="txExtras" class="row-2"></div>
+            <button class="btn btn-primary" id="txAdd">Add Transaction</button>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><h3 class="m0">All Transactions</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Date</th><th>Owner</th><th>Member</th><th>Type</th><th>Amount</th><th>Details</th><th>Note</th></tr></thead>
+                <tbody id="txTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- REPORTS -->
+        <section id="view-reports" class="view">
+          <div class="panel">
+            <div class="row-2">
+              <div class="form-group"><label for="rpFrom">From</label><input id="rpFrom" type="date" /></div>
+              <div class="form-group"><label for="rpTo">To</label><input id="rpTo" type="date" /></div>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="rpDaily">Generate Daily (Today)</button>
+              <button class="btn btn-outline" id="rpRange">Generate Range</button>
+              <button class="btn" id="rpCSV">Download CSV</button>
+              <button class="btn btn-primary" id="rpSalaryToday">Salary Sheet (Today)</button>
+              <button class="btn" id="rpSalaryCSV">Download Salary CSV</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><h3 class="m0">Report Preview</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Date</th><th>Owner</th><th>Member</th><th>Type</th><th>Amount</th><th>Details</th><th>Note</th></tr>
+                </thead>
+                <tbody id="reportBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><h3 class="m0">USA – SALARY SHEET</h3></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                <tr>
+                  <th>Date</th><th>Receptionist</th><th>Work Group Name</th><th>Member</th>
+                  <th>USDT Top Up $</th><th>Fiat Convert USD</th><th>Pay Out USD</th>
+                  <th>Percentage Bonus</th><th>Fixed Bonus</th><th>Transaction Charges</th>
+                  <th>Total Gross Reward</th><th>Remaining Balance</th>
+                </tr>
+                </thead>
+                <tbody id="salaryBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ADMIN -->
+        <section id="view-admin" class="view">
+          <div class="panel">
+          <button id="genCode" class="btn">Generate 5 Codes</button>
+          <table class="table">
+            <thead>
+              <tr><th>Code</th><th>Issued To</th><th>Status</th><th>Created</th></tr>
+            </thead>
+            <tbody id="codeTable"></tbody>
+          </table>
+
+            <p class="muted mt8">Note: Codes are stored in the database.</p>
+          </div>
+        </section>
+
+        <!-- SETTINGS -->
+        <section id="view-settings" class="view">
+          <div class="panel">
+            <div class="panel-header"><h3 class="m0">Settings</h3></div>
+            <div class="row-2">
+              <div class="form-group"><label>Display Name</label><input id="stName" /></div>
+              <div class="form-group"><label>Role</label><select id="stRole"><option>Employee</option><option>Admin</option></select></div>
+            </div>
+            <div class="row-2">
+              <div class="form-group">
+                <label>Workspace Currency</label>
+                <select id="stCurrency">
+                  <option value="USD">USD — US Dollar</option>
+                  <option value="EUR">EUR — Euro</option>
+                  <option value="GBP">GBP — British Pound</option>
+                  <option value="PKR">PKR — Pakistani Rupee</option>
+                  <option value="INR">INR — Indian Rupee</option>
+                  <option value="AED">AED — UAE Dirham</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Default Bonus % (on Payout)</label><input id="stBonusPct" type="number" min="0" step="0.01" /></div>
+            </div>
+            <div class="row-2">
+              <div class="form-group"><label>Default Fixed Bonus per Task (per payout)</label><input id="stPerTask" type="number" min="0" step="0.01" /></div>
+              <div></div>
+            </div>
+            <p class="muted">Only admins can change defaults & currency.</p>
+            <button class="btn btn-primary" id="saveSettings">Save Settings</button>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <!-- Add/Edit Member Modal -->
+  <div class="modal" id="memberModal" aria-modal="true" role="dialog" hidden>
+    <div class="box">
+      <div class="head">
+        <h3 class="m0" id="mmTitle">Add Member</h3>
+        <button class="btn btn-ghost" id="mmClose" aria-label="Close">×</button>
+      </div>
+      <div class="body">
+        <div class="form-group"><label>Owner (Employee)</label><select id="mmOwner"></select></div>
+        <div class="row-2">
+          <div class="form-group"><label>Member Name</label><input id="mmName" /></div>
+          <div class="form-group"><label>Working ID</label><input id="mmWorkId" placeholder="e.g. EMP-001" /></div>
+        </div>
+        <div class="row-2">
+          <div class="form-group"><label>Work Group Name</label><input id="mmGroup" placeholder="e.g. USA103" /></div>
+          <div class="form-group"><label>Opening Balance</label><input id="mmOpening" type="number" step="0.01" value="0" /></div>
+        </div>
+        <div class="row-2">
+          <div class="form-group"><label>Commission %</label><input id="mmComm" type="number" min="0" max="100" step="0.1" value="10" /></div>
+          <div class="form-group"><label>Bonus % Override (optional)</label><input id="mmBonusOv" type="number" min="0" step="0.01" placeholder="leave blank for default" /></div>
+        </div>
+        <div class="row-2">
+          <div class="form-group"><label>Seed Received</label><input id="mmRecv" type="number" min="0" step="0.01" value="0" /></div>
+          <div class="form-group"><label>Seed Payouts</label><input id="mmPay" type="number" min="0" step="0.01" value="0" /></div>
+        </div>
+        <div class="row-2">
+          <div class="form-group"><label>Frozen</label><input id="mmFrozen" type="number" min="0" step="0.01" value="0" /></div>
+          <div class="form-group"><label>Runaway</label><input id="mmRun" type="number" min="0" step="0.01" value="0" /></div>
+        </div>
+      </div>
+      <div class="foot">
+        <button class="btn" id="mmCancel">Cancel</button>
+        <button class="btn btn-primary" id="mmSave">Save</button>
+      </div>
+    </div>
+  </div>
+  
+</body>
+</html>

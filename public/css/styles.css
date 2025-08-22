@@ -1,0 +1,434 @@
+/* ==========================================================================
+   PAYROLLPRO UI — PROFESSIONAL THEME
+   - Backward compatible with your existing class names
+   - Better accessibility, dark mode, responsiveness, and states
+   ========================================================================== */
+
+/* --- GLOBAL HIDE FIX ------------------------------------------------------ */
+[hidden] { display: none !important; }
+.form[hidden] { display: none !important; }
+
+/* --- ROOT TOKENS ---------------------------------------------------------- */
+:root{
+  color-scheme: light dark;
+
+  /* Brand */
+  --primary:#ff3924;
+  --secondary:#d52f1c;
+
+  /* Surfaces & text */
+  --bg:#f5f7fb;
+  --panel:#ffffff;
+  --panel-alt:#fafbff;
+  --text:#111827;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+
+  /* Semantic */
+  --success:#22c55e;
+  --danger:#ef4444;
+  --warning:#f59e0b;
+  --info:#3b82f6;
+
+  /* Effects */
+  --radius:12px;
+  --space:12px;
+  --shadow-sm:0 2px 8px rgba(0,0,0,.05);
+  --shadow:0 4px 12px rgba(0,0,0,.06);
+  --shadow-lg:0 10px 30px rgba(0,0,0,.10);
+
+  /* Typography scale */
+  --fs-12:12px; --fs-13:13px; --fs-14:14px; --fs-16:16px; --fs-20:20px; --fs-24:24px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0f1217;
+    --panel:#171b23;
+    --panel-alt:#131823;
+    --text:#e7ecf2;
+    --muted:#93a0ae;
+    --border:#232a35;
+    --shadow-sm:0 2px 8px rgba(0,0,0,.4);
+    --shadow:0 6px 16px rgba(0,0,0,.45);
+    --shadow-lg:0 14px 34px rgba(0,0,0,.55);
+  }
+}
+
+/* Explicit theme override support */
+[data-theme="light"]{
+  color-scheme: light;
+  --bg:#f5f7fb; --panel:#fff; --panel-alt:#fafbff; --text:#111827; --muted:#6b7280; --border:#e5e7eb;
+}
+[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#0f1217; --panel:#171b23; --panel-alt:#131823; --text:#e7ecf2; --muted:#93a0ae; --border:#232a35;
+}
+
+/* --- BASE / RESET --------------------------------------------------------- */
+*{ box-sizing:border-box }
+html,body{ height:100% }
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+}
+a,button,input,select{ font:inherit }
+button{ cursor:pointer }
+img,svg,video{ max-width:100%; height:auto; display:block }
+canvas{ max-width:100% }
+:focus-visible{ outline:2px solid var(--primary); outline-offset:2px }
+button, .btn, input, select { min-height:44px } /* touch targets */
+
+/* High-contrast & forced colors */
+@media (prefers-contrast: more){
+  :focus-visible{ outline-width:3px }
+}
+@media (forced-colors: active){
+  :focus-visible{ outline:1px solid CanvasText }
+}
+
+/* Utilities */
+.m0{ margin:0 }
+.mt8{ margin-top:8px }
+.w100{ width:100% }
+.visually-hidden{ position:absolute!important; height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap }
+
+/* --- LAYOUT --------------------------------------------------------------- */
+.container{ display:flex; min-height:100dvh; }
+.sidebar{
+  width:260px; background:linear-gradient(180deg,var(--primary),var(--secondary));
+  color:#fff; padding:16px 0; flex-shrink:0; transition:transform .28s ease, width .28s ease;
+  will-change: transform;
+}
+.sidebar .logo{ display:flex; align-items:center; gap:10px; padding:0 16px 16px; border-bottom:1px solid rgba(255,255,255,.15); margin-bottom:8px }
+.logo-mark{ font-size:22px }
+.side-nav{ list-style:none; padding:0; margin:0 }
+.side-nav li{
+  display:flex; align-items:center; gap:10px; padding:12px 16px; cursor:pointer;
+  transition: background .18s ease, border-color .18s ease;
+  border-left:4px solid transparent;
+}
+.side-nav li:hover{ background:rgba(255,255,255,.12) }
+.side-nav li.active{ background:rgba(255,255,255,.16); border-left-color:#fff }
+
+/* Collapsible sidebar for mobile */
+.sidebar--collapsed{ transform:translateX(-100%); }
+.sidebar-toggle{ display:none } /* hook class if you add a button */
+
+.main{ flex:1; min-width:0; display:flex; flex-direction:column }
+.header{
+  display:flex; justify-content:space-between; align-items:center;
+  gap:12px; padding:12px 16px; border-bottom:1px solid var(--border); background:var(--panel);
+  position:sticky; top:0; z-index:3;
+}
+.left{ display:flex; align-items:center; gap:10px }
+.icon-btn{
+  width:40px; height:40px; border-radius:999px; border:1px solid var(--border);
+  background:var(--panel); display:grid; place-items:center; color:var(--text);
+  transition: transform .08s ease, background .2s ease, border-color .2s ease;
+}
+.icon-btn:hover{ background:var(--panel-alt) }
+.icon-btn:active{ transform: translateY(1px) }
+
+.user-info{ display:flex; align-items:center; gap:10px }
+.avatar{
+  width:36px; height:36px; border-radius:50%; display:grid; place-items:center;
+  background:#ffe2de; color:#7a1208; font-weight:800
+}
+.role-badge{
+  font-size:11px; background:linear-gradient(90deg,var(--primary),var(--secondary)); color:#fff;
+  padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.25)
+}
+.badge-line{ font-size:12px; color:var(--muted) }
+
+.content{ padding:16px }
+.view{ display:none }
+.view.active{ display:block }
+
+/* --- CARDS & PANELS ------------------------------------------------------- */
+.cards{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:12px; margin-bottom:16px
+}
+.card{
+  background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow);
+  padding:14px; border:1px solid var(--border);
+}
+.card-title{ font-size:var(--fs-13); color:var(--muted); font-weight:600 }
+.card-value{ font-size:var(--fs-24); font-weight:800; color:var(--primary) }
+.card + .card{ /* subtle hover affordance */
+  transition: transform .12s ease, box-shadow .2s ease;
+}
+.card:hover{ transform: translateY(-1px); box-shadow:var(--shadow-lg) }
+
+.row{
+  display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-bottom:16px; align-items:start;
+}
+.row > .panel{ min-width:0 } /* prevents min-content clamp */
+
+.panel{
+  background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px;
+  border:1px solid var(--border);
+}
+.panel-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:10px }
+
+/* --- CHARTS --------------------------------------------------------------- */
+.chart-wrap{
+  position: relative; width: 100%; height: 340px;
+}
+.chart-wrap > canvas{
+  position: absolute; inset: 0; width: 100% !important; height: 100% !important; display: block;
+}
+/* Legacy helper (kept, but normalized) */
+.chart-fixed{ width:100%; height: 340px; display:block; }
+
+/* --- TABLES --------------------------------------------------------------- */
+.table-wrap{
+  width:100%; overflow:auto; -webkit-overflow-scrolling:touch;
+  border:1px solid var(--border); border-radius:10px; background:var(--panel);
+  scrollbar-gutter: stable both-edges;
+}
+table{ width:100%; border-collapse:collapse; min-width:720px }
+th,td{ padding:10px; border-bottom:1px solid var(--border); text-align:left; vertical-align:middle }
+th{
+  font-size:var(--fs-13); color:var(--muted);
+  background: var(--panel-alt);
+}
+tbody tr:hover{ background:rgba(0,0,0,.03) }
+@media (prefers-color-scheme: dark){
+  tbody tr:hover{ background:rgba(255,255,255,.03) }
+}
+/* Sticky header on tall tables */
+.table-wrap thead th{ position:sticky; top:0; z-index:1 }
+
+/* --- BUTTONS -------------------------------------------------------------- */
+.btn{
+  padding:10px 12px; border-radius:10px; border:1px solid transparent;
+  background:var(--panel-alt); color:var(--text); font-weight:600;
+  transition: background .2s ease, color .2s ease, border-color .2s ease, transform .06s ease;
+}
+.btn:hover{ background:rgba(0,0,0,.06) }
+@media (prefers-color-scheme: dark){
+  .btn:hover{ background:rgba(255,255,255,.06) }
+}
+.btn:active{ transform: translateY(1px) }
+.btn:disabled, .btn[aria-disabled="true"]{ opacity:.6; cursor:not-allowed }
+
+.btn-primary{ background:var(--primary); color:#fff }
+.btn-primary:hover{ filter:brightness(1.05) }
+.btn-outline{ background:transparent; border-color:var(--primary); color:var(--primary) }
+.btn-outline:hover{ background:color-mix(in lab, var(--primary) 12%, transparent) }
+.btn-danger{ background:var(--danger); color:#fff }
+.btn-ghost{ background:transparent; border:1px solid var(--border); color:var(--text) }
+
+/* --- TABS ----------------------------------------------------------------- */
+.tabs{
+  display:flex; gap:8px; border-bottom:1px solid var(--border);
+  margin-bottom:10px; overflow:auto; scrollbar-width:thin;
+}
+.tab{
+  padding:10px; cursor:pointer; font-weight:700; color:var(--muted);
+  border-radius:8px 8px 0 0; white-space:nowrap; border:1px solid transparent;
+  transition: color .2s ease, background .2s ease, border-color .2s ease;
+}
+.tab:hover{ color:var(--text) }
+.tab.active{
+  color:var(--primary); background:var(--panel); border:1px solid var(--border); border-bottom:0
+}
+
+/* --- BADGES --------------------------------------------------------------- */
+.badge{ padding:2px 8px; border-radius:999px; font-size:11px; font-weight:800 }
+.badge-success{ background:rgba(34,197,94,.18); color:#22c55e }
+.badge-warning{ background:rgba(245,158,11,.18); color:#f59e0b }
+.badge-danger{ background:rgba(239,68,68,.18); color:#ef4444 }
+
+/* --- FORMS ---------------------------------------------------------------- */
+.form{ display:block }
+.row-2{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px }
+.form-group{ margin-bottom:10px }
+label{ display:block; margin-bottom:6px; font-weight:700; font-size:var(--fs-13) }
+input,select,textarea{
+  width:100%; padding:10px 12px; border:1px solid var(--border);
+  border-radius:10px; background:var(--panel); color:var(--text);
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+input::placeholder, textarea::placeholder{ color: color-mix(in lab, var(--muted) 75%, transparent) }
+input:focus, select:focus, textarea:focus{
+  border-color: color-mix(in lab, var(--primary) 50%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in lab, var(--primary) 20%, transparent);
+  outline: none;
+}
+input[aria-invalid="true"], .is-invalid{
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in lab, var(--danger) 18%, transparent);
+}
+
+.btn-row{ display:flex; gap:8px; flex-wrap:wrap }
+
+/* --- AUTH LAYOUT ---------------------------------------------------------- */
+.auth-wrap{ display:flex; align-items:center; justify-content:center; min-height:100dvh; padding:20px }
+.auth-card{
+  background:var(--panel); border-radius:14px; box-shadow:var(--shadow-lg);
+  width:100%; max-width:560px; overflow:hidden; border:1px solid var(--border);
+}
+.auth-head{
+  background:linear-gradient(90deg,var(--primary),var(--secondary)); color:#fff;
+  padding:16px 18px; display:flex; align-items:center; gap:10px
+}
+.auth-body{ padding:16px 18px }
+.auth-tabs{ display:flex; gap:8px; margin-bottom:10px }
+.tab-btn{
+  flex:1; padding:10px; border-radius:10px; border:1px solid var(--border);
+  background:var(--panel); font-weight:800; cursor:pointer; color:var(--text);
+  transition: background .2s ease, border-color .2s ease, color .2s ease;
+}
+.tab-btn:hover{ background:var(--panel-alt) }
+.tab-btn.active{ background:var(--primary); color:#fff; border-color:var(--primary) }
+.muted{ color:var(--muted); font-size:12px }
+
+/* --- MODAL ---------------------------------------------------------------- */
+.modal{
+  position:fixed; inset:0; background:rgba(0,0,0,.5);
+  display:flex; align-items:center; justify-content:center; z-index:50; padding:16px;
+}
+.modal[hidden]{ display:none }
+.modal .box{ background:var(--panel); border-radius:14px; max-width:640px; width:min(92vw,640px); overflow:hidden; border:1px solid var(--border) }
+.modal .head{
+  background:linear-gradient(90deg,var(--primary),var(--secondary)); color:#fff;
+  padding:12px 14px; display:flex; justify-content:space-between; align-items:center
+}
+.modal .body{ padding:12px 14px; max-height:70vh; overflow:auto }
+.modal .foot{
+  padding:12px 14px; background: var(--panel-alt);
+  display:flex; justify-content:flex-end; gap:8px
+}
+
+/* --- TOASTS --------------------------------------------------------------- */
+.toast-container{
+  position: fixed; top: 14px; right: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+  z-index: 9999; pointer-events: none;
+}
+.toast{
+  pointer-events: auto; min-width: 240px; max-width: 420px;
+  padding: 10px 12px; border-radius: 10px; background: var(--panel); color: var(--text);
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+  opacity: 0; transform: translateY(-6px); font-weight: 600;
+  animation: toast-in .18s ease-out forwards;
+}
+.toast--success{ border-left: 4px solid var(--success); }
+.toast--error  { border-left: 4px solid var(--danger);  }
+.toast--info   { border-left: 4px solid var(--info);    }
+@keyframes toast-in{ to { opacity: 1; transform: translateY(0); } }
+@keyframes toast-out{ to { opacity: 0; transform: translateY(-6px); } }
+
+/* --- RESPONSIVE ----------------------------------------------------------- */
+@media (max-width: 1200px){
+  .content{ padding:14px }
+}
+@media (max-width: 1024px){
+  .row{ grid-template-columns:1fr }
+  .container{ flex-direction:column }
+  .header{ padding:10px 12px }
+  .chart-wrap, .chart-fixed{ height: 300px; }
+  .sidebar-toggle{ display:inline-flex }
+  .sidebar{ position:fixed; top:0; bottom:0; left:0; z-index:40 }
+  .main{ margin-left:0 } /* when collapsed */
+}
+@media (max-width: 640px){
+  .cards{ grid-template-columns:1fr }
+  .row-2{ grid-template-columns:1fr }
+  .avatar{ width:32px; height:32px }
+  .content{ padding:12px }
+  .chart-wrap, .chart-fixed{ height: 260px; }
+}
+@media (max-width: 420px){
+  .header{ gap:8px }
+  .icon-btn{ width:36px; height:36px }
+  .btn{ padding:10px 10px }
+}
+
+/* Motion safety */
+@media (prefers-reduced-motion: reduce){
+  *{ animation:none !important; transition:none !important; scroll-behavior:auto !important }
+}
+
+/* --- SCROLLBARS (subtle) -------------------------------------------------- */
+.table-wrap::-webkit-scrollbar, .tabs::-webkit-scrollbar{ height:10px }
+.table-wrap::-webkit-scrollbar-thumb, .tabs::-webkit-scrollbar-thumb{
+  background: rgba(0,0,0,.15); border-radius: 10px; border: 2px solid transparent; background-clip: content-box;
+}
+@media (prefers-color-scheme: dark){
+  .table-wrap::-webkit-scrollbar-thumb, .tabs::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.18) }
+}
+
+/* ==== PAGE TRANSITIONS (CSS-only) ======================================== */
+/* tokens */
+:root{
+  --rt-ease: cubic-bezier(.22,1,.36,1);
+  --rt-fast: 220ms;
+  --rt: 320ms;
+}
+
+/* Default: animate the view when it becomes .active (entry only) */
+.view.active{
+  animation: rt-fade-slide var(--rt) var(--rt-ease) both;
+}
+
+/* Switch styles by setting data-transition on a parent (e.g., <body> or .content) */
+[data-transition="fade"]  .view.active{ animation: rt-fade var(--rt-fast) var(--rt-ease) both; }
+[data-transition="slide"] .view.active{ animation: rt-fade-slide var(--rt) var(--rt-ease) both; }
+[data-transition="cover"] .view.active{ animation: rt-cover-down var(--rt) var(--rt-ease) both; }
+
+/* Keyframes */
+@keyframes rt-fade{
+  from{ opacity:0 }
+  to  { opacity:1 }
+}
+@keyframes rt-fade-slide{
+  from{ opacity:0; transform: translateY(10px) scale(.985) }
+  to  { opacity:1; transform: none }
+}
+@keyframes rt-cover-down{
+  from{ clip-path: inset(0 0 100% 0); opacity:.6 }
+  to  { clip-path: inset(0 0 0 0); opacity:1 }
+}
+
+/* Optional: stagger cards/panels on entry — add data-stagger to any container */
+[data-stagger] > *{
+  --d: 0ms; animation: rt-pop var(--rt-fast) var(--rt-ease) both; animation-delay: var(--d);
+}
+[data-stagger] > *:nth-child(1){ --d: 40ms }
+[data-stagger] > *:nth-child(2){ --d: 80ms }
+[data-stagger] > *:nth-child(3){ --d: 120ms }
+[data-stagger] > *:nth-child(4){ --d: 160ms }
+[data-stagger] > *:nth-child(5){ --d: 200ms }
+@keyframes rt-pop{
+  from{ opacity:0; transform: translateY(6px) scale(.99) }
+  to  { opacity:1; transform: none }
+}
+
+/* Respect motion/contrast preferences */
+@media (prefers-reduced-motion: reduce){
+  .view.active,
+  [data-stagger] > *{ animation: none !important }
+}
+
+:root{
+  --shadow-sm: none !important;
+  --shadow:    none !important;
+  --shadow-lg: none !important;
+}
+
+/* Ensure any direct box-shadow declarations are cleared */
+.card,
+.card:hover,
+.panel,
+.auth-card,
+.toast {
+  box-shadow: none !important;
+}
+
+#chartFinance, #chartEmpBal { min-height: 260px; height: 260px; }
