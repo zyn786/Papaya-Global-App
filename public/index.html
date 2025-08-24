@@ -6,6 +6,7 @@
   <title>Papaya Global — Realtime Payroll Management</title>
 
   <link rel="stylesheet" href="/css/styles.css">
+  <!-- Chart.js served locally from /vendor (server exposes node_modules/chart.js/dist) -->
   <script src="/vendor/chart.umd.js"></script>
   <script src="/js/app.js" defer></script>
 </head>
@@ -159,11 +160,20 @@
               <div id="chartFinanceMsg" class="muted mt8" hidden>Chart.js not found — chart disabled.</div>
             </div>
 
+            <!-- Right-side dashboard: search + recent -->
             <div class="panel">
               <div class="panel-header">
                 <h3 class="m0">Recent Transactions</h3>
                 <button class="btn btn-outline" id="goTx">View All</button>
               </div>
+
+              <!-- small search on dashboard (optional/independent of transactions view) -->
+              <div class="row">
+                <input id="dashTxSearch" class="input" placeholder="Quick search…" />
+                <button id="dashTxSearchBtn" class="btn">Search</button>
+                <button id="dashTxClear" class="btn btn-outline">Clear</button>
+              </div>
+
               <div class="table-wrap">
                 <table>
                   <thead>
@@ -178,13 +188,12 @@
           </div>
 
           <div class="panel">
-          <div class="panel-header"><h3 class="m0">Balances by Employee</h3></div>
-
-          <div class="chart-wrap">
-            <canvas id="chartEmpBal" role="img" aria-label="Employee balances chart"></canvas>
+            <div class="panel-header"><h3 class="m0">Balances by Employee</h3></div>
+            <div class="chart-wrap">
+              <canvas id="chartEmpBal" role="img" aria-label="Employee balances chart"></canvas>
+            </div>
+            <div id="chartEmpMsg" class="muted mt8" hidden>Chart.js not found — chart disabled.</div>
           </div>
-          <div id="chartEmpMsg" class="muted mt8" hidden>Chart.js not found — chart disabled.</div>
-        </div>
         </section>
 
         <!-- EMPLOYEES (Admin) -->
@@ -254,15 +263,30 @@
               </div>
             </div>
 
+            <!-- extra fields will render depending on type -->
             <div id="txExtras" class="row-2"></div>
+
             <button class="btn btn-primary" id="txAdd">Add Transaction</button>
+          </div>
+
+          <!-- MINIMAL SEARCH BAR -->
+          <div class="panel" role="search" aria-label="Filter transactions">
+            <div class="row">
+              <input id="txSearch" class="input" placeholder="Search transactions…" />
+              <button id="txSearchBtn" class="btn">Search</button>
+              <button id="txClear" class="btn btn-outline">Clear</button>
+            </div>
           </div>
 
           <div class="panel">
             <div class="panel-header"><h3 class="m0">All Transactions</h3></div>
             <div class="table-wrap">
               <table>
-                <thead><tr><th>Date</th><th>Owner</th><th>Member</th><th>Type</th><th>Amount</th><th>Details</th><th>Note</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Date</th><th>Owner</th><th>Member</th><th>Type</th><th>Amount</th><th>Details</th><th>Note</th><th>Actions</th>
+                  </tr>
+                </thead>
                 <tbody id="txTable"></tbody>
               </table>
             </div>
@@ -318,14 +342,15 @@
         <!-- ADMIN -->
         <section id="view-admin" class="view">
           <div class="panel">
-          <button id="genCode" class="btn">Generate 5 Codes</button>
-          <table class="table">
-            <thead>
-              <tr><th>Code</th><th>Issued To</th><th>Status</th><th>Created</th></tr>
-            </thead>
-            <tbody id="codeTable"></tbody>
-          </table>
-
+            <button id="genCode" class="btn">Generate 5 Codes</button>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Code</th><th>Issued To</th><th>Status</th><th>Created</th></tr>
+                </thead>
+                <tbody id="codeTable"></tbody>
+              </table>
+            </div>
             <p class="muted mt8">Note: Codes are stored in the database.</p>
           </div>
         </section>
@@ -400,6 +425,36 @@
       </div>
     </div>
   </div>
-  
+
+  <!-- Transaction edit modal (Admin only – wired in JS) -->
+  <div id="txEditModal" class="modal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Edit Transaction</h3>
+        <button id="txeClose" class="icon">&times;</button>
+      </div>
+      <div class="modal-body grid-2">
+        <label>Type
+          <select id="txeType">
+            <option>USDT Top Up</option>
+            <option>Fiat Convert</option>
+            <option>Payout</option>
+            <option>Frozen</option>
+            <option>Runaway</option>
+          </select>
+        </label>
+        <label>Amount <input id="txeAmt" type="number" step="0.01"></label>
+        <label>Fee <input id="txeFee" type="number" step="0.01"></label>
+        <label>Bonus % <input id="txeBonus" type="number" step="0.01" placeholder="blank = unchanged"></label>
+        <label>Bank Details <input id="txeBank" /></label>
+        <label>Crypto Address <input id="txeCrypto" /></label>
+        <label class="col-span-2">Note <input id="txeNote" /></label>
+      </div>
+      <div class="modal-foot">
+        <button id="txeCancel" class="btn btn-outline">Cancel</button>
+        <button id="txeSave" class="btn">Save</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
