@@ -136,25 +136,46 @@ async function hydrateWorkspace() {
     const code = cfg?.currencyCode || 'USD';
     fmt = new Intl.NumberFormat(undefined, { style: 'currency', currency: code });
 
-    $('#uName').textContent = ME?.name || 'User';
-    $('#uRole').textContent = ME?.role || 'Employee';
-    $('#uBadge').textContent = ME?.role === 'Admin' ? 'ADM' : 'EMP';
-    $('#avatar').textContent = (ME?.name || 'U').slice(0,1).toUpperCase();
+    // Header
+    setText('#uName', ME?.name || 'User');
+    setText('#uRole', ME?.role || 'Employee');
+    setText('#uBadge', ME?.role === 'Admin' ? 'ADM' : 'EMP');
+    setText('#avatar', (ME?.name || 'U').slice(0, 1).toUpperCase());
 
-    $('#stName').value = ME?.name || '';
-    $('#stRole').value = ME?.role || 'Employee';
-    $('#stCurrency').value = code;
-    $('#stBonusPct').value = (cfg?.bonusRate ?? 0.04) * 100;
-    $('#stPerTask').value = (cfg?.fixedPerTask ?? 1);
+    function setText(sel, txt) {
+      const el = document.querySelector(sel);
+      if (el) el.textContent = txt ?? '';
+    }
+    function setValue(sel, val) {
+      const el = document.querySelector(sel);
+      if (el) el.value = val ?? '';
+    }
+    // Settings form
+    setValue('#stName', ME?.name || '');
+    setValue('#stRole', ME?.role || 'Employee');
+    setValue('#stCurrency', code);
+    setValue('#stBonusPct', (cfg?.bonusRate ?? 0.04) * 100);
+    setValue('#stPerTask', (cfg?.fixedPerTask ?? 1));
 
+    // Disable fields for non-admins (guard elements in case they don’t exist)
     const lock = ME?.role !== 'Admin';
-    $('#stRole').disabled = ME?.role !== 'Admin';
-    $('#stCurrency').disabled = lock;
-    $('#stBonusPct').disabled = lock;
-    $('#stPerTask').disabled = lock;
+    const stRole     = document.querySelector('#stRole');
+    const stCurrency = document.querySelector('#stCurrency');
+    const stBonusPct = document.querySelector('#stBonusPct');
+    const stPerTask  = document.querySelector('#stPerTask');
 
-    $$('.admin-only').forEach((el) => (el.style.display = ME?.role === 'Admin' ? '' : 'none'));
-  } catch (e) { console.error('hydrateWorkspace failed', e); }
+    if (stRole)     stRole.disabled     = ME?.role !== 'Admin';
+    if (stCurrency) stCurrency.disabled = lock;
+    if (stBonusPct) stBonusPct.disabled = lock;
+    if (stPerTask)  stPerTask.disabled  = lock;
+
+    // Show/hide admin-only items
+    document.querySelectorAll('.admin-only').forEach(el => {
+      el.style.display = ME?.role === 'Admin' ? '' : 'none';
+    });
+  } catch (e) {
+    console.error('hydrateWorkspace failed', e);
+  }
 }
 
 /* ===== Navigation ===== */

@@ -1,15 +1,31 @@
+// src/controllers/config.controller.js
 import Config from '../models/Config.js';
+import { publish } from '../utils/realtime.js';
 
-export async function getConfig(_,res){
-  const cfg = await Config.findOne();
-  res.json(cfg || { currencyCode:'USD', bonusRate:0.04, fixedPerTask:1 });
+const ALLOWED = ['USD','EUR','GBP','PKR','INR','AED','SAR'];
+
+export async function getConfig(req, res) {
+  const cfg = await Config.findOne() || await Config.create({});
+  res.json(cfg);
 }
-export async function saveConfig(req,res){
-  const { currencyCode, bonusRate, fixedPerTask } = req.body;
-  const cfg = await Config.findOne() || new Config();
-  if (currencyCode) cfg.currencyCode = currencyCode;
-  if (typeof bonusRate === 'number') cfg.bonusRate = bonusRate;
-  if (typeof fixedPerTask === 'number') cfg.fixedPerTask = fixedPerTask;
-  await cfg.save();
+
+export async function saveConfig(req, res) {
+  if (req.user?.role !== 'Admin') {
+    return res.status(403).json({ error: 'Admin only' });
+  }
+
+  // Accept both currencyCode and currency (alias), normalize & validate
+  const raw = (req.body.currencyCode || req.body.currency || 'USD').toUpperCase();
+  const currencyCode = ALLOWED.includes(raw) ? raw : 'USD';
+
+  const bonusRate = typeof req.body.bonusRate === 'number' ? req.body.bonusRate : undefined;
+  const fixedPerTask = typeof req.body.fixedPerTask === 'number' ? req.body.fixedPerTask : undefined;
+
+  const update = { currencyCode };
+  if (bonusRate !== undefined) update.bonusRate = bonusRate;
+  if (fixedPerTask !== undefined) update.fixedPerTask = fixedPerTask;
+
+  const cfg = await Config.findOneAndUpdate({}, update, { upsert: true, new: true });
+  publish('config:updated', cfg);              // <-- notify clients via SSE
   res.json(cfg);
 }

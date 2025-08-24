@@ -1,7 +1,12 @@
 import mongoose from 'mongoose';
-const ConfigSchema = new mongoose.Schema({
-  currencyCode: { type:String, default:'USD' },
-  bonusRate: { type:Number, default:0.04 },     // decimal
-  fixedPerTask: { type:Number, default:1 }      // 1 USD per payout by default
-},{ timestamps:true });
-export default mongoose.model('Config', ConfigSchema);
+
+const schema = new mongoose.Schema(
+  {
+    currencyCode: { type: String, default: 'USD' }, // <- used by frontend
+    bonusRate: { type: Number, default: 0.04 },
+    fixedPerTask: { type: Number, default: 1 },
+  },
+  { timestamps: true }
+);
+
+export default mongoose.model('Config', schema);
