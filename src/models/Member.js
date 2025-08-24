@@ -21,6 +21,7 @@ const MemberSchema = new Schema(
   { timestamps: true }
 );
 
+MemberSchema.index({ owner: 1 });
 MemberSchema.index({ owner: 1, name: 1 }, { unique: false });
 
 MemberSchema.set('toJSON', {

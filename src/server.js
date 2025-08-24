@@ -9,6 +9,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
+import compression from 'compression';
 
 import { connectDB } from '../db.js';
 import { requireAuth } from './middleware/auth.js';
@@ -126,3 +127,45 @@ connectDB(mongoUrl)
     console.error('DB connect failed', err);
     process.exit(1);
   });
+
+  // ---- Security (Helmet + CSP) ----
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:"],
+        fontSrc: ["'self'", "data:"],
+        connectSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'self'"],
+      },
+    },
+    referrerPolicy: { policy: 'no-referrer' },
+  })
+);
+
+// ---- Compression (skip SSE) ----
+const shouldCompress = (req, res) => {
+  // never compress the SSE stream
+  if (req.path === '/api/stream') return false;
+  const type = res.getHeader('Content-Type');
+  if (type && String(type).includes('text/event-stream')) return false;
+  return compression.filter(req, res);
+};
+app.use(compression({ threshold: 1024, filter: shouldCompress })); // 1KB+
+
+// ---- Core middleware ----
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || true,
+    credentials: true,
+  })
+);
+app.use(express.json());
+app.use(cookieParser());
+app.use(morgan('dev'));
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }));

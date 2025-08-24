@@ -34,9 +34,10 @@ const TransactionSchema = new Schema(
 );
 
 // Helpful indexes
-TransactionSchema.index({ dateISO: -1 });
-TransactionSchema.index({ owner: 1, dateISO: -1 });
-TransactionSchema.index({ memberId: 1, dateISO: -1 });
+TransactionSchema.index({ owner: 1, createdAt: -1 });
+TransactionSchema.index({ memberId: 1, createdAt: -1 });
+TransactionSchema.index({ createdAt: -1 });
+TransactionSchema.index({ owner: 'text', member: 'text', type: 'text', note: 'text' });
 
 TransactionSchema.set('toJSON', {
   virtuals: true,
